@@ -18,8 +18,8 @@ jobs:
     permissions:
       contents: read
     steps:
-        - name: Checkout Repository
-          uses: actions/checkout@v4 # v4.2.2
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       - name: Package Application Artifact
         run: |
@@ -31,7 +31,7 @@ jobs:
           echo "hashes=$(sha256sum release.tar.gz | base64 -w0)" >> "$GITHUB_OUTPUT"
 
       - name: Upload Build Artifact
-        uses: actions/upload-artifact@v4 # v4.6.2
+        uses: actions/upload-artifact@v4
         with:
           name: release-artifact
           path: release.tar.gz
