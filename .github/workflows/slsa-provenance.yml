@@ -1,0 +1,48 @@
+name: SLSA Level 3 Provenance Generator
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+
+permissions: read-all
+
+jobs:
+  build:
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@<SHA_CHECKOUT> # v4.2.2
+
+      - name: Package Application Artifact
+        run: |
+          tar -czvf release.tar.gz main.py
+
+      - name: Generate SHA256 Checksum for SLSA
+        id: hash
+        run: |
+          echo "hashes=$(sha256sum release.tar.gz | base64 -w0)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@<SHA_UPLOAD> # v4.6.2
+        with:
+          name: release-artifact
+          path: release.tar.gz
+
+  provenance:
+    needs: [build]
+    permissions:
+      actions: read
+      id-token: write
+      contents: write
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    with:
+      base64-subjects: "${{ needs.build.outputs.hashes }}"
+      upload-assets: true
